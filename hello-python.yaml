@@ -18,7 +18,6 @@ spec:
     spec:
       containers:
       - name: hello-python-container
-        # SUBSTITUA: Use o endereço do seu Azure Container Registry (ACR)
         image: clusterk8sregistry.azurecr.io/hello-python:latest 
         ports:
         - containerPort: 8080
@@ -42,13 +41,13 @@ spec:
 
         volumeMounts:
           - name: gcp-key-volume
-            mountPath: "/var/secrets/gcp" # Onde a chave JSON será acessível no container
+            mountPath: "/var/secrets/gcp"
             readOnly: true
 
-      volumes: # <--- Adicione esta seção
+      volumes:
       - name: gcp-key-volume
         secret:
-          secretName: gcp-svc-key # O nome do Secret criado no Passo 2
+          secretName: gcp-svc-key
           items:
             - key: gcp-service-account.json
               path: gcp-service-account.json
