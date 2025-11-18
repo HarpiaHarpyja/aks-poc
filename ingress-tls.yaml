@@ -11,6 +11,7 @@ metadata:
     service.beta.kubernetes.io/azure-load-balancer-inbound-nat-rules: '[{"protocol": "tcp", "backendPort": 80, "frontendPort": 80}, {"protocol": "tcp", "backendPort": 443, "frontendPort": 443}]'
 spec:
   # 3. Adicionar a regra do nome de domínio
+  ingressClassName: nginx
   rules:
   - host: hello-python-aks.duckdns.org
     http:
