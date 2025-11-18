@@ -53,15 +53,15 @@ spec:
               path: gcp-service-account.json
 # ---
 # # 2. Service LoadBalancer para Acesso Público
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: hello-python-service
-#   namespace: azure-store-1758905293727
-# spec:
-#   type: LoadBalancer # Expõe o serviço publicamente
-#   ports:
-#   - port: 80
-#     targetPort: 8080 # A porta em que o Flask está a ouvir
-#   selector:
-#     app: hello-python
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-python-service
+  namespace: azure-store-1758905293727
+spec:
+  type: ClusterIP # Acessivel apenas internamente, para Ingress Controller
+  ports:
+  - port: 80
+    targetPort: 8080 # A porta em que o Flask está a ouvir
+  selector:
+    app: hello-python
