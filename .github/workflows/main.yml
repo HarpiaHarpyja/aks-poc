@@ -81,6 +81,8 @@ jobs:
         with:
           # Inclua o novo arquivo hpa-hello-python.yaml aqui
           manifests: |
+            hello-python-deployment.yaml
+            hello-python-service.yaml
             hello-python.yaml
             hello-python-hpa.yaml
             cluster-issuer.yaml
