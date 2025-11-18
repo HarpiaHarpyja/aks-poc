@@ -1,6 +1,19 @@
-# container-poc
+# POC AKS Autoscaled
 
-POC AKS Autoscaled
+## Terminologia
+
+Para maior clareza, este guia define os seguintes termos:
+
+* Nó: Uma máquina de trabalho no Kubernetes, parte de um cluster.
+* Cluster: Um conjunto de nós que executam aplicações em contêineres gerenciadas pelo Kubernetes. Neste exemplo, e na maioria das implementações comuns do Kubernetes, os nós do cluster não fazem parte da internet pública.
+* Roteador de borda: um roteador que aplica a política de firewall ao seu cluster. Pode ser um gateway gerenciado por um provedor de nuvem ou um componente físico de hardware.
+* Rede de cluster: Um conjunto de links, lógicos ou físicos, que facilitam a comunicação dentro de um cluster, de acordo com o modelo de rede do Kubernetes .
+* Serviço: Um Service Kubernetes que identifica um conjunto de Pods usando rótulo Seletores. A menos que seja mencionado o contrário, presume-se que os Serviços possuam IPs virtuais roteáveis ​​apenas dentro da rede do cluster
+
+Quanto à questões de acesso de entrada ao app:
+* Ingress: expõe rotas HTTP e HTTPS de fora do cluster para serviços dentro do cluster. O roteamento do tráfego é controlado por regras definidas no recurso Ingress. Um Ingress pode ser configurado para fornecer URLs acessíveis externamente aos Serviços, balancear a carga do tráfego, encerrar conexões SSL/TLS e oferecer hospedagem virtual baseada em nomes. Um controlador de Ingress é responsável por atender à solicitação do Ingress, geralmente com um balanceador de carga, embora também possa configurar seu roteador de borda ou servidores front-end adicionais para auxiliar no gerenciamento do tráfego.
+
+
 
 ## Arquivos do repositório
 
