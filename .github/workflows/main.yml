@@ -83,7 +83,6 @@ jobs:
           manifests: |
             hello-python-deployment.yaml
             hello-python-service.yaml
-            hello-python.yaml
             hello-python-hpa.yaml
             cluster-issuer.yaml
             ingress-tls.yaml
