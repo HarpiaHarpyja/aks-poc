@@ -2,6 +2,34 @@
 
 POC AKS Autoscaled
 
+## Arquivos do repositório
+
+Os arquivos YAML são as instruções de como o Kubernetes deve rodar sua aplicação:
+
+### Arquivo main
+
+O arquivo main.yaml é o seu robô de automação (pipeline) rodando no GitHub. Ele é responsável por fazer o deploy das novas versões sempre que um novo push é enviado.
+
+| Passo | Ação no main.yaml | O que Acontece | 
+| :--- | :--- | :--- |
+| 1. | Code checkout | O robô baixa a última versão do seu código do repositório (o que acabou de ser "pusheado" para a branch main)
+| .2.-3. | Login no Azure e ACR | O robô se autentica no Azure (usando AZURE_CREDENTIALS) e no Azure Container Registry (ACR), que é o seu depósito de imagens Docker
+|.4.-5. | Build e Push da Imagem | Seu código Python é transformado em uma Imagem Docker (um pacote auto-suficiente) e é enviada para o seu depósito (ACR). A tag latest garante que é a versão mais nova.
+| 6. | Set AKS Context | O robô se conecta ao seu cluster AKS (clusterk8s) para saber onde implantar as coisas.
+| 7. / 7a / 7b | Criação de Secrets | O robô cria (ou atualiza) objetos secretos no Kubernetes para guardar informações confidenciais, como a senha do banco de dados (DB_PASS) e a chave de serviço do GCP, sem expô-las no código.
+| 8. | Deploy to AKS | O robô finalmente aplica todos os seus arquivos de configuração Kubernetes (.yaml) no cluster, implantando a nova versão da sua aplicação.
+
+### Arquivos YAMLs
+
+Os arquivos YAML são as instruções de como o Kubernetes deve rodar sua aplicação:
+
+| Arquivo | Objeto Kubernetes | O que Ele Faz |
+| :--- | :--- | :--- |
+| hello-python.yaml | Deployment | Cria e gerencia os Pods (instâncias) da sua aplicação Python. Ele garante que a imagem do ACR seja usada, define recursos de CPU/Memória, e monta o secret do GCP como um arquivo dentro do contêiner |
+| hpa-python.yaml | HorizontalPodAutoscaler (HPA) | Diz ao Kubernetes para escalar automaticamente o número de instâncias (Pods) de 1 até 5 se o uso médio de CPU passar de 50%. |
+| ingress-tls.yaml | Ingress | É o ponto de entrada. Ele gerencia o tráfego externo para sua aplicação, define a regra de domínio (hello-python-aks.duckdns.org) e configura o TLS (HTTPS) usando o certificado que o Cert-Manager irá gerar. |
+| cluster-issuer.yaml  | ClusterIssuer | É a instrução para o Cert-Manager de como obter um certificado (neste caso, do Let's Encrypt). |
+
 ## Como verificar logs no terminal da Azure
 
 1. Abra um terminal da Azure.
@@ -124,3 +152,9 @@ NSG_ID=$(az network vnet subnet show --resource-group MC_k8scluster_group_cluste
 
 # Exemplo: NODEPOOL_NAME="agentpool"
 
+
+az aks show --resource-group k8scluster_group --name clusterk8s --query identity.principalId --output tsv
+
+az role assignment create   --assignee c2faa1d0-4a48-4c7b-86d8-0b187ef74aa7   --role "Network Contributor"   --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/k8scluster_group
+
+helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx   --namespace ingress-nginx   --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"=k8scluster_group   --reuse-values
