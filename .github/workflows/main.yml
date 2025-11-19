@@ -83,6 +83,7 @@ jobs:
           manifests: |
             aks-helloworld-one.yaml
             aks-helloworld-two.yaml
+            cluster-issuer.yaml
             hello-world-ingress.yml
           # hello-python-deployment.yaml
           # hello-python-service.yaml
