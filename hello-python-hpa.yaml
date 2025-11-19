@@ -4,7 +4,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: hello-python-hpa
-  namespace: azure-store-1758905293727
+  namespace: ingress
 spec:
   scaleTargetRef:
     # Aponta para o Deployment que queremos escalar

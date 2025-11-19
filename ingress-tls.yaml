@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hello-python-ingress
-  namespace: azure-store-1758905293727
+  namespace: ingress
   annotations:
     # 1. Anotação legada para compatibilidade, embora ingressClassName seja preferida.
     kubernetes.io/ingress.class: nginx 

@@ -5,7 +5,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-python-deployment
-  namespace: azure-store-1758905293727
+  namespace: ingress
 spec:
   replicas: 1
   selector:

@@ -2,7 +2,7 @@ apiVersion: v1 # Adicionado para garantir a clareza do objeto
 kind: Service
 metadata:
   name: hello-python-service
-  namespace: azure-store-1758905293727
+  namespace: ingress
 spec:
   type: ClusterIP # Acessível apenas internamente, para Ingress Controller
   ports:
