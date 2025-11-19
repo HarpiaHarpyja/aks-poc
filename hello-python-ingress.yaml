@@ -2,6 +2,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-python-ingress
+  annotations:
+    # 1. Anotação legada para compatibilidade, embora ingressClassName seja preferida.
+    kubernetes.io/ingress.class: nginx 
+
+    # 2. **ATIVAÇÃO:** Anotação para o Cert-Manager
+    # Diz ao cert-manager para usar o ClusterIssuer que criamos.
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+    # 3. **ATIVAÇÃO:** Força o NGINX a redirecionar HTTP (porta 80) para HTTPS (porta 443).
+    # Esta anotação deve estar ativa para garantir a segurança da comunicação.
+    nginx.ingress.kubernetes.io/ssl-redirect: "true" 
+    
+    # 4. Anotação Azure (Geralmente não é necessária se você instalou o NGINX via Helm/Add-on)
+    #service.beta.kubernetes.io/azure-load-balancer-inbound-nat-rules: '[{"protocol": "tcp", "backendPort": 80, "frontendPort": 80}, {"protocol": "tcp", "backendPort": 443, "frontendPort": 443}]'
 spec:
   replicas: 1
   selector:
