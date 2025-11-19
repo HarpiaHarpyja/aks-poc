@@ -2,7 +2,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hello-world-ingress
-  namespace: ingress
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/use-regex: "true"
@@ -13,13 +12,26 @@ spec:
   - http:
       paths:
       - path: /hello-world-one(/|$)(.*)
-        pathType: Prefix
+        pathType: ImplementationSpecific
         backend:
           service:
-            name: hello-python-ingress
+            name: aks-helloworld-one
             port:
               number: 80
-
+      - path: /hello-world-two(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: aks-helloworld-two
+            port:
+              number: 80
+      - path: /(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: aks-helloworld-one
+            port:
+              number: 80
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -34,7 +46,7 @@ spec:
   - http:
       paths:
       - path: /static(/|$)(.*)
-        pathType: Prefix
+        pathType: ImplementationSpecific
         backend:
           service:
             name: aks-helloworld-one

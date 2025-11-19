@@ -81,11 +81,14 @@ jobs:
         with:
           # Inclua o novo arquivo hpa-hello-python.yaml aqui
           manifests: |
-            hello-python-deployment.yaml
-            hello-python-service.yaml
-            hello-python-hpa.yaml
-            hello-python-ingress.yaml
-            hello-world-ingress.yaml
+            aks-helloworld-one.yaml
+            aks-helloworld-two.yaml
+            hello-world-ingress.yml
+          # hello-python-deployment.yaml
+          # hello-python-service.yaml
+          # hello-python-hpa.yaml
+          # hello-python-ingress.yaml
+          # hello-world-ingress.yaml
           # cluster-issuer.yaml
           # ingress-tls.yaml
           images: |
