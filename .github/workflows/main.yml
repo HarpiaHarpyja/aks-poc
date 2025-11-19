@@ -50,14 +50,14 @@ jobs:
       # 7 - Criar o namespace se ele não existir
       - name: Create namespace if not exists
         run: |
-          kubectl create namespace azure-store-1758905293727 --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create namespace ingress --dry-run=client -o yaml | kubectl apply -f -
 
       # 7a - Criar o Secret com as variáveis de conexão do BD
       - name: Create Kubernetes Secret
         run: |
           # NOTA: O nome do Secret deve ser 'app-config-secret' ou outro nome de sua escolha
           kubectl create secret generic app-config-secret \
-            --namespace azure-store-1758905293727 \
+            --namespace ingress \
             --from-literal=DB_PASS=${{ secrets.DB_PASS }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
@@ -68,12 +68,12 @@ jobs:
         # O valor é armazenado com a chave 'gcp-service-account.json' dentro do Secret do K8s.
         run: |
           kubectl create secret generic gcp-svc-key \
-            --namespace azure-store-1758905293727 \
+            --namespace ingress \
             --from-literal=gcp-service-account.json='${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}' \
             --dry-run=client -o yaml | kubectl apply -f -
         env:
           # Certifique-se de que sua variável NAMESPACE esteja definida aqui ou globalmente
-          NAMESPACE: azure-store-1758905293727
+          NAMESPACE: ingress
           
       #  8 - Aplicar o Manifesto Kubernetes (Deployment e HPA)
       - name: Deploy to AKS
@@ -89,4 +89,4 @@ jobs:
           # ingress-tls.yaml
           images: |
             ${{ steps.build-image.outputs.image_tag }}
-          namespace: azure-store-1758905293727
+          namespace: ingress
