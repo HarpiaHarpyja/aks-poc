@@ -84,7 +84,8 @@ jobs:
             hello-python-deployment.yaml
             hello-python-service.yaml
             hello-python-hpa.yaml
-            ingress-minimal.yaml
+            aks-helloworld-one.yaml
+          #  ingress-minimal.yaml
           # cluster-issuer.yaml
           # ingress-tls.yaml
           images: |
