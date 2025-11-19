@@ -85,13 +85,6 @@ jobs:
             aks-helloworld-two.yaml
             cluster-issuer.yaml
             hello-world-ingress.yml
-          # hello-python-deployment.yaml
-          # hello-python-service.yaml
-          # hello-python-hpa.yaml
-          # hello-python-ingress.yaml
-          # hello-world-ingress.yaml
-          # cluster-issuer.yaml
-          # ingress-tls.yaml
           images: |
             ${{ steps.build-image.outputs.image_tag }}
           namespace: ingress
