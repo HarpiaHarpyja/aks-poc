@@ -60,4 +60,18 @@ spec:
           secretName: gcp-svc-key
           items:
             - key: gcp-service-account.json
-              path: gcp-service-account.json
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-python-ingress
+  namespace: ingress
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080  # Porta do container
+    protocol: TCP
+  selector:
+    app: hello-python-ingress

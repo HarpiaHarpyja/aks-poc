@@ -85,6 +85,7 @@ jobs:
             hello-python-service.yaml
             hello-python-hpa.yaml
             hello-python-ingress.yaml
+            hello-world-ingress.yaml
           # cluster-issuer.yaml
           # ingress-tls.yaml
           images: |
