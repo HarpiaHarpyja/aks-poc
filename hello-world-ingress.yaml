@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hello-python  
+  name: hello-python-ingress
 spec:
   replicas: 1
   selector:
@@ -47,14 +47,3 @@ spec:
           items:
             - key: gcp-service-account.json
               path: gcp-service-account.json
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: hello-python  
-spec:
-  type: ClusterIP
-  ports:
-  - port: 80
-  selector:
-    app: hello-python
