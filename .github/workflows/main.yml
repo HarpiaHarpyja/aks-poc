@@ -37,14 +37,6 @@ jobs:
       # 5 - Enviar a imagem para o ACR
       - name: Push image to ACR
         run: docker push ${{ steps.build-image.outputs.image_tag }}
-
-      # Atualizar o campo image no manifesto do Deployment para usar a imagem gerada
-      - name: Patch Deployment manifest image to built image
-        run: |
-          IMAGE_TAG=${{ steps.build-image.outputs.image_tag }}
-          echo "Replacing image in  with $IMAGE_TAG"
-          # Substitui a primeira linha "image: ..." encontrada no manifesto (ajuste se houver mais ocorrências)
-          sed -i "s|image: .*|image: ${IMAGE_TAG}|" 
       
       # 6 - Definir o Contexto do AKS
       - name: Set AKS Context
@@ -117,7 +109,7 @@ jobs:
           kubectl rollout status deployment cert-manager -n cert-manager --timeout=180s
           kubectl rollout status deployment cert-manager-webhook -n cert-manager --timeout=180s
           kubectl rollout status deployment cert-manager-cainjector -n cert-manager --timeout=180s
-          
+
       #  9 - Aplicar o Manifesto Kubernetes (Deployment e HPA)
       - name: Deploy to AKS
         uses: azure/k8s-deploy@v4
