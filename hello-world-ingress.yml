@@ -10,10 +10,10 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
 spec:
   ingressClassName: nginx
-  # tls:
-  # - hosts:
-  #   - hello-python-aks.duckdns.org
-  #   secretName: tls-secret
+  tls:
+  - hosts:
+    - hello-python-aks.duckdns.org
+    secretName: tls-secret
   rules:
   - host: hello-python-aks.duckdns.org
     http:

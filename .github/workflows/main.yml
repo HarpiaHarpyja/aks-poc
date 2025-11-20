@@ -38,7 +38,15 @@ jobs:
       - name: Push image to ACR
         run: docker push ${{ steps.build-image.outputs.image_tag }}
 
-      # 6 - Definir o Contexto do AKS (CORRIGIDO)
+      # Atualizar o campo image no manifesto do Deployment para usar a imagem gerada
+      - name: Patch Deployment manifest image to built image
+        run: |
+          IMAGE_TAG=${{ steps.build-image.outputs.image_tag }}
+          echo "Replacing image in  with $IMAGE_TAG"
+          # Substitui a primeira linha "image: ..." encontrada no manifesto (ajuste se houver mais ocorrências)
+          sed -i "s|image: .*|image: ${IMAGE_TAG}|" 
+      
+      # 6 - Definir o Contexto do AKS
       - name: Set AKS Context
         uses: azure/aks-set-context@v3
         with:
@@ -93,6 +101,22 @@ jobs:
             --set controller.ingressClassResource.name=nginx \
             --set controller.service.type=LoadBalancer \
             --wait # Espera o LoadBalancer ser provisionado
+      
+      # <<< Novo: Instalar cert-manager via Helm (com CRDs) e aguardar rollout
+      - name: Install cert-manager (Helm)
+        run: |
+          helm repo add jetstack https://charts.jetstack.io
+          helm repo update
+          helm upgrade --install cert-manager jetstack/cert-manager \
+            --namespace cert-manager \
+            --create-namespace \
+            --set installCRDs=true \
+            --version v1.14.0 \
+            --wait
+          # Aguarda os deployments do cert-manager ficarem prontos
+          kubectl rollout status deployment cert-manager -n cert-manager --timeout=180s
+          kubectl rollout status deployment cert-manager-webhook -n cert-manager --timeout=180s
+          kubectl rollout status deployment cert-manager-cainjector -n cert-manager --timeout=180s
           
       #  9 - Aplicar o Manifesto Kubernetes (Deployment e HPA)
       - name: Deploy to AKS
@@ -103,7 +127,7 @@ jobs:
             aks-helloworld-one.yaml
             aks-helloworld-two.yaml
             hello-world-ingress.yml
-          #  cluster-issuer.yaml
+            cluster-issuer.yaml
           images: |
             ${{ steps.build-image.outputs.image_tag }}
           namespace: ingress
