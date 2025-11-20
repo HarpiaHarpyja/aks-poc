@@ -74,8 +74,27 @@ jobs:
         env:
           # Certifique-se de que sua variável NAMESPACE esteja definida aqui ou globalmente
           NAMESPACE: ingress
+
+      # 8: Instalar o NGINX Ingress Controller via Helm ---
+      - name: Install NGINX Ingress Controller (Helm)
+        run: |
+          # 1. Adiciona o repositório Helm do NGINX Ingress Controller
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo update
+
+          # 2. Instala o Ingress Controller NGINX
+          # O comando 'install' garante que a instalação ocorra apenas uma vez.
+          # O valor 'controller.service.type=LoadBalancer' é crucial para obter um IP público do Azure.
+          helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+            --namespace ingress \
+            --set controller.replicaCount=2 \
+            --set controller.nodeSelector."kubernetes\.io/os"=linux \
+            --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-internal"="false" \
+            --set controller.ingressClassResource.name=nginx \
+            --set controller.service.type=LoadBalancer \
+            --wait # Espera o LoadBalancer ser provisionado
           
-      #  8 - Aplicar o Manifesto Kubernetes (Deployment e HPA)
+      #  9 - Aplicar o Manifesto Kubernetes (Deployment e HPA)
       - name: Deploy to AKS
         uses: azure/k8s-deploy@v4
         with:
