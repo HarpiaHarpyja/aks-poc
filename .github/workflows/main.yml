@@ -83,7 +83,7 @@ jobs:
           helm repo update
 
           # 2. Instala o Ingress Controller NGINX
-          # O comando 'install' garante que a instalação ocorra apenas uma vez.
+          # O comando 'install' garante que a instalação ocorra apenas uma única vez.
           # O valor 'controller.service.type=LoadBalancer' é crucial para obter um IP público do Azure.
           helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
             --namespace ingress \
