@@ -140,8 +140,7 @@ Dadas as variáveis de configuração:
 $NOME_CLUSTER="clusterk8s" # nome do cluster do AKS
 $RG_PRINCIPAL="k8scluster_group"
 $NSG_RG="MC_k8scluster_group_clusterk8s_eastus"
-NSG_NAME=$(az network nsg list \
-    --resource-group $NSG_RG \
+NSG_NAME=$(az network nsg list      --resource-group $NSG_RG \
     --query "[?contains(name, 'aks-agentpool')].name" -o tsv) # $NSG_NAME="aks-agentpool-30022306-nsg"
 SEU_EMAIL="<SEU_EMAIL_PARA_LETS_ENCRYPT>"
 SEU_DOMINIO="<SEU_DOMINIO_REAL_EX_app.minhaempresa.com>"
@@ -204,18 +203,15 @@ Para ver os certificados:
 ```
 kubectl get certificates -n azure-store-1758905293727 # listar certificados
 kubectl describe certificate hello-python-tls-secret -n azure-store-1758905293727 # ver mais detalhes
-```
+
 
 SUBNET_NAME=$(az network vnet subnet list  --resource-group MC_k8scluster_group_clusterk8s_eastus  --vnet-name aks-vnet-30022306   --query '[0].name'  -o tsv) # aks-subnet
 
 NSG_ID=$(az network vnet subnet show --resource-group MC_k8scluster_group_clusterk8s_eastus  --vnet-name aks-vnet-30022306 --name aks-subnet --query networkSecurityGroup.id -o tsv) # /subscriptions/670bc431-d5b3-4586-afcc-5b920f8c7e5e/resourceGroups/MC_k8scluster_group_clusterk8s_eastus/providers/Microsoft.Network/networkSecurityGroups/aks-agentpool-30022306-nsg
 
+```
 
- Exemplo: NODEPOOL_NAME="agentpool"
+## Ingress e TLS
+-- [Create an unmanaged ingress controller](https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/load-bal-ingress-c/create-unmanaged-ingress-controller?tabs=azure-cli)
 
-
-az aks show --resource-group k8scluster_group --name clusterk8s --query identity.principalId --output tsv
-
-az role assignment create   --assignee c2faa1d0-4a48-4c7b-86d8-0b187ef74aa7   --role "Network Contributor"   --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/k8scluster_group
-
-helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx   --namespace ingress-nginx   --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"=k8scluster_group   --reuse-values
+-- [Usar TLS com um controlador de entrada no Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/previous-versions/azure/aks/ingress-tls?tabs=azure-powershell)
