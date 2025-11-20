@@ -102,8 +102,8 @@ jobs:
           manifests: |
             aks-helloworld-one.yaml
             aks-helloworld-two.yaml
-            cluster-issuer.yaml
             hello-world-ingress.yml
+          #  cluster-issuer.yaml
           images: |
             ${{ steps.build-image.outputs.image_tag }}
           namespace: ingress
