@@ -11,7 +11,13 @@ Para maior clareza, este guia define os seguintes termos:
 * **Serviço**: Um Service Kubernetes que identifica um conjunto de Pods usando rótulo Seletores. A menos que seja mencionado o contrário, presume-se que os Serviços possuam IPs virtuais roteáveis ​​apenas dentro da rede do cluster
 
 Quanto à questões de acesso de entrada ao app:
-* **Ingress**: expõe rotas HTTP e HTTPS de fora do cluster para serviços dentro do cluster. O roteamento do tráfego é controlado por regras definidas no recurso Ingress. Um Ingress pode ser configurado para fornecer URLs acessíveis externamente aos Serviços, balancear a carga do tráfego, encerrar conexões SSL/TLS e oferecer hospedagem virtual baseada em nomes. Um controlador de Ingress é responsável por atender à solicitação do Ingress, geralmente com um balanceador de carga, embora também possa configurar seu roteador de borda ou servidores front-end adicionais para auxiliar no gerenciamento do tráfego. Para saber mais, clique [aqui](https://kubernetes.io/docs/concepts/services-networking/ingress/).
+* **Ingress**: expõe rotas HTTP e HTTPS de fora do cluster para serviços dentro do cluster. O roteamento do tráfego é controlado por regras definidas no recurso Ingress. Um Ingress pode ser configurado para fornecer URLs acessíveis externamente aos Serviços, balancear a carga do tráfego, encerrar conexões SSL/TLS e oferecer hospedagem virtual baseada em nomes. Um controlador de Ingress é responsável por atender à solicitação do Ingress, geralmente com um balanceador de carga, embora também possa configurar seu roteador de borda ou servidores front-end adicionais para auxiliar no gerenciamento do tráfego.
+
+### Ingress e TLS
+-- [Create an unmanaged ingress controller](https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/load-bal-ingress-c/create-unmanaged-ingress-controller?tabs=azure-cli)
+
+-- [Usar TLS com um controlador de entrada no Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/previous-versions/azure/aks/ingress-tls?tabs=azure-powershell)
+Para saber mais, clique [aqui](https://kubernetes.io/docs/concepts/services-networking/ingress/).
 
 Você pode proteger um Ingress especificando um Secret que contém uma chave privada e um certificado **TLS**.
 
@@ -204,14 +210,9 @@ Para ver os certificados:
 kubectl get certificates -n azure-store-1758905293727 # listar certificados
 kubectl describe certificate hello-python-tls-secret -n azure-store-1758905293727 # ver mais detalhes
 
-
 SUBNET_NAME=$(az network vnet subnet list  --resource-group MC_k8scluster_group_clusterk8s_eastus  --vnet-name aks-vnet-30022306   --query '[0].name'  -o tsv) # aks-subnet
 
 NSG_ID=$(az network vnet subnet show --resource-group MC_k8scluster_group_clusterk8s_eastus  --vnet-name aks-vnet-30022306 --name aks-subnet --query networkSecurityGroup.id -o tsv) # /subscriptions/670bc431-d5b3-4586-afcc-5b920f8c7e5e/resourceGroups/MC_k8scluster_group_clusterk8s_eastus/providers/Microsoft.Network/networkSecurityGroups/aks-agentpool-30022306-nsg
 
 ```
 
-## Ingress e TLS
--- [Create an unmanaged ingress controller](https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/load-bal-ingress-c/create-unmanaged-ingress-controller?tabs=azure-cli)
-
--- [Usar TLS com um controlador de entrada no Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/previous-versions/azure/aks/ingress-tls?tabs=azure-powershell)
