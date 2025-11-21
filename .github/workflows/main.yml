@@ -78,14 +78,12 @@ jobs:
       # <<< Novo: Instalar cert-manager via Helm (com CRDs) e aguardar rollout
       - name: Install cert-manager (Helm)
         run: |
-          $Namespace = 'ingress-basic'
-
           helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
           helm repo update
 
           helm install ingress-nginx ingress-nginx/ingress-nginx `
             --create-namespace `
-            --namespace $Namespace `
+            --namespace ingress-basic `
             --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz `
             --set controller.service.externalTrafficPolicy=Local
 
