@@ -95,7 +95,7 @@ jobs:
           manifests: |
             aks-helloworld-one.yaml
             aks-helloworld-two.yaml
-          # hello-world-ingress.yml
+            hello-world-ingress.yaml
           #  cluster-issuer.yaml
           images: |
             ${{ steps.build-image.outputs.image_tag }}
