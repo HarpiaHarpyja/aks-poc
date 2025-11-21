@@ -74,41 +74,20 @@ jobs:
         env:
           # Certifique-se de que sua variável NAMESPACE esteja definida aqui ou globalmente
           NAMESPACE: ingress
-
-      # 8: Instalar o NGINX Ingress Controller via Helm ---
-      - name: Install NGINX Ingress Controller (Helm)
-        run: |
-          # 1. Adiciona o repositório Helm do NGINX Ingress Controller
-          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-          helm repo update
-
-          # 2. Instala o Ingress Controller NGINX
-          # O comando 'install' garante que a instalação ocorra apenas uma única vez.
-          # O valor 'controller.service.type=LoadBalancer' é crucial para obter um IP público do Azure.
-          helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
-            --namespace ingress \
-            --set controller.replicaCount=2 \
-            --set controller.nodeSelector."kubernetes\.io/os"=linux \
-            --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-internal"="false" \
-            --set controller.ingressClassResource.name=nginx \
-            --set controller.service.type=LoadBalancer \
-            --wait # Espera o LoadBalancer ser provisionado
       
       # <<< Novo: Instalar cert-manager via Helm (com CRDs) e aguardar rollout
       - name: Install cert-manager (Helm)
         run: |
-          helm repo add jetstack https://charts.jetstack.io
+          $Namespace = 'ingress-basic'
+
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
           helm repo update
-          helm upgrade --install cert-manager jetstack/cert-manager \
-            --namespace cert-manager \
-            --create-namespace \
-            --set installCRDs=true \
-            --version v1.14.0 \
-            --wait
-          # Aguarda os deployments do cert-manager ficarem prontos
-          kubectl rollout status deployment cert-manager -n cert-manager --timeout=180s
-          kubectl rollout status deployment cert-manager-webhook -n cert-manager --timeout=180s
-          kubectl rollout status deployment cert-manager-cainjector -n cert-manager --timeout=180s
+
+          helm install ingress-nginx ingress-nginx/ingress-nginx `
+            --create-namespace `
+            --namespace $Namespace `
+            --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz `
+            --set controller.service.externalTrafficPolicy=Local
 
       #  9 - Aplicar o Manifesto Kubernetes (Deployment e HPA)
       - name: Deploy to AKS
@@ -118,8 +97,8 @@ jobs:
           manifests: |
             aks-helloworld-one.yaml
             aks-helloworld-two.yaml
-            hello-world-ingress.yml
-            cluster-issuer.yaml
+          # hello-world-ingress.yml
+          #  cluster-issuer.yaml
           images: |
             ${{ steps.build-image.outputs.image_tag }}
-          namespace: ingress
+          namespace: ingress-basic
