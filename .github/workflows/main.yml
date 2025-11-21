@@ -76,7 +76,7 @@ jobs:
           NAMESPACE: ingress
       
       # <<< Novo: Instalar cert-manager via Helm (com CRDs) e aguardar rollout
-      - name: Install cert-manager (Helm)
+      - name: Install Ingress
         run: |
           helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
           helm repo update
