@@ -10,46 +10,60 @@ from typing import List
 
 app = Flask(__name__)
 
-# # --- Variáveis de Configuração ---
+# --- Configurações ---
 INSTANCE_CONNECTION_NAME = "telemetria-rumo-9ccc4:us-central1:grafana-server-harpia"
 DB_USER = "grafana_user"
 DB_PASS = os.environ.get("DB_PASS")
 DB_NAME = "grafana"
-
 IP_TYPE = IPTypes.PUBLIC
 
 USER_TABLE = "user" 
 EMAIL_COLUMN = "email"
 
-# --- Função de Conexão ---
+# ============================================================
+# 🔧 Criar UM ÚNICO connector global — evita Unclosed sessions
+# ============================================================
+print("🔧 Inicializando Connector global...")
+GLOBAL_CONNECTOR = Connector(ip_type=IP_TYPE, refresh_strategy="LAZY")
+print("✅ Connector global criado com sucesso!")
+
+
+# ==================================================================
+# Função segura de conexão — sem criar múltiplas sessões aiohttp
+# ==================================================================
 def connect_with_connector() -> sqlalchemy.engine.base.Engine:
-    """Inicializa um pool de conexões para a instância do Cloud SQL."""
-    
-    connector = Connector(ip_type=IP_TYPE, refresh_strategy="LAZY")
+    """Inicializa um pool de conexões reutilizando o connector global."""
+
+    print("⚙️ Criando engine com conector global...")
 
     def getconn() -> pymysql.connections.Connection:
-        conn: pymysql.connections.Connection = connector.connect(
+        print("🔌 Abrindo conexão com MySQL via Cloud SQL Connector...")
+        conn = GLOBAL_CONNECTOR.connect(
             INSTANCE_CONNECTION_NAME,
             "pymysql",
             user=DB_USER,
             password=DB_PASS,
             db=DB_NAME,
         )
+        print("   -> Conexão obtida!")
         return conn
 
-    # 3. Cria o engine do SQLAlchemy com o método de conexão seguro
-    pool = sqlalchemy.create_engine(
+    engine = sqlalchemy.create_engine(
         "mysql+pymysql://",
         creator=getconn,
         pool_size=5,
         max_overflow=2,
-        pool_timeout=30, # segundos
+        pool_timeout=30,
     )
-    return pool
 
+    print("✅ Engine criado com sucesso!")
+    return engine
+
+
+# ==================================================================
+# Função principal — agora SEM warnings de sessão não fechada
+# ==================================================================
 def get_user_emails() -> List[str]:
-    """Conecta ao banco de dados e retorna a lista de e-mails, com logs detalhados."""
-    
     print("\n==========================")
     print("🔍 Iniciando get_user_emails()")
     print("==========================\n")
@@ -59,121 +73,102 @@ def get_user_emails() -> List[str]:
 
     print(f"📌 SQL montado:\n{query}\n")
 
-    # -------------------------
-    # 1. TENTAR CRIAR O ENGINE
-    # -------------------------
     try:
         print("⚙️ Tentando criar engine DB...")
         db_engine = connect_with_connector()
-        print("✅ Engine criado com sucesso!")
-        print(f"   -> Tipo: {type(db_engine)}")
     except Exception as e:
-        print("\n❌ ERRO AO CRIAR O ENGINE!")
-        print(f"Erro: {e}")
-        print("Traceback completo:")
+        print("❌ ERRO ao criar engine!")
         traceback.print_exc()
-        return []  # não adianta continuar
+        return []
 
-    # -------------------------
-    # 2. TENTAR CONECTAR
-    # -------------------------
     try:
         print("\n🔌 Tentando conectar ao banco...")
         with db_engine.connect() as db_conn:
             print("✅ Conexão estabelecida!")
-            print(f"   -> Tipo: {type(db_conn)}")
 
             try:
-                print("\n▶️ Executando a consulta...")
+                print("\n▶️ Executando consulta...")
                 result = db_conn.execute(sqlalchemy.text(query))
-                print("✅ Consulta executada com sucesso!")
-
+                print("✅ Consulta OK!")
             except Exception as e:
-                print("\n❌ ERRO AO EXECUTAR A CONSULTA SQL!")
-                print(f"Erro: {e}")
-                print("Traceback completo:")
+                print("❌ ERRO ao executar SQL!")
                 traceback.print_exc()
                 return []
 
-            # -------------------------
-            # 3. Ler resultados linha por linha
-            # -------------------------
-            try:
-                print("\n📥 Lendo resultados linha por linha:")
-                for idx, row in enumerate(result):
-                    print(f"   -> Linha {idx}: {row}")
-                    emails.append(row[0])
-                print("\n📦 Total de e-mails encontrados:", len(emails))
-
-            except Exception as e:
-                print("\n❌ ERRO AO ITERAR RESULTADOS!")
-                print(f"Erro: {e}")
-                print("Traceback completo:")
-                traceback.print_exc()
-                return []
+            print("\n📥 Lendo resultados:")
+            for idx, row in enumerate(result):
+                print(f"   -> Linha {idx}: {row}")
+                emails.append(row[0])
 
     except Exception as e:
-        print("\n❌ ERRO AO CONECTAR AO BANCO!")
-        print(f"Erro: {e}")
-        print("Traceback completo:")
+        print("❌ ERRO ao conectar/consultar!")
         traceback.print_exc()
         return []
 
-    # -------------------------
-    # 4. TENTAR FECHAR O ENGINE
-    # -------------------------
-    try:
-        print("\n🧹 Tentando liberar o pool do engine...")
-        db_engine.dispose()
-        print("✅ Pool liberado com sucesso!")
-    except Exception as e:
-        print("\n⚠️ ERRO AO FECHAR O POOL DO ENGINE (não é fatal)")
-        print(f"Erro: {e}")
-        traceback.print_exc()
+    finally:
+        try:
+            print("\n🧹 Fechando o engine...")
+            db_engine.dispose()
+            print("   -> Engine dispose OK!")
+        except Exception as e:
+            print("⚠️ ERRO ao liberar engine!")
+            traceback.print_exc()
 
     print("\n🏁 Finalizando get_user_emails().")
     print("==========================\n")
     return emails
 
-# --- Execução do Script ---
+
+# ==================================================================
+# Rotas Flask
+# ==================================================================
 @app.route('/lista-emails')
 def lista_emails():
-    lista_emails = get_user_emails()
-    
-    if lista_emails:
-        return jsonify(lista_emails)
-    else:
-        return jsonify("Nenhum e-mail encontrado ou erro de conexão/consulta.")
+    lst = get_user_emails()
+    return jsonify(lst if lst else "Nenhum e-mail encontrado ou erro.")
 
-# Função que simula o consumo de CPU
+
+# Stress CPU
 def cpu_intensive_task(duration_seconds):
-    """Executa um loop para consumir CPU."""
     start_time = time.time()
     count = 0
     while (time.time() - start_time) < duration_seconds:
-        # A operação de elevação ao quadrado é intencionalmente intensiva em CPU
         count += 1
         _ = 2 ** 1000
     return count
 
 @app.route('/stress')
 def stress_cpu():
-    # Define a duração do stress em segundos (0.5s por padrão)
     try:
         duration = float(request.args.get('duration', 0.5))
     except ValueError:
         duration = 0.5
-        
+
     count = cpu_intensive_task(duration)
-    
     return jsonify({
-        "message": f"Stress de CPU executado por {duration} segundos.",
+        "message": f"Stress {duration}s",
         "iterations": count
     })
 
+
 @app.route('/')
 def index():
-    return jsonify({"message": "Hello! Try /lista-emails or /stress endpoints."})
+    return jsonify({"message": "Hello! Try /lista-emails or /stress"})
+
+
+# ==================================================================
+# Encerramento limpo — evita UNCL0SED CLIENT SESSION
+# ==================================================================
+@app.teardown_appcontext
+def shutdown_context(exception=None):
+    print("\n🛑 Encerrando Flask — fechando Connector global...")
+    try:
+        GLOBAL_CONNECTOR.close()
+        print("✅ GLOBAL_CONNECTOR fechado sem erros!")
+    except Exception as e:
+        print("⚠️ Erro ao fechar Connector:")
+        traceback.print_exc()
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
