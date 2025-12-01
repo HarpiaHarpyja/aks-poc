@@ -17,6 +17,7 @@ spec:
       containers:
         - name: hello-python-container
           image: clusterk8sregistry.azurecr.io/hello-python:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
 
