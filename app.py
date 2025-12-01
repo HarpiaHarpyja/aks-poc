@@ -1,3 +1,4 @@
+import traceback
 from flask import Flask, request, jsonify
 import time
 import os 
@@ -47,32 +48,91 @@ def connect_with_connector() -> sqlalchemy.engine.base.Engine:
     return pool
 
 def get_user_emails() -> List[str]:
-    """Conecta ao banco de dados e retorna a lista de e-mails."""
+    """Conecta ao banco de dados e retorna a lista de e-mails, com logs detalhados."""
     
-    # 1. Estabelece a conexão (pool)
-    db_engine = connect_with_connector()
+    print("\n==========================")
+    print("🔍 Iniciando get_user_emails()")
+    print("==========================\n")
+
     emails = []
-    
-    query = f"SELECT {EMAIL_COLUMN} FROM {USER_TABLE};" 
+    query = f"SELECT {EMAIL_COLUMN} FROM {USER_TABLE};"
 
+    print(f"📌 SQL montado:\n{query}\n")
+
+    # -------------------------
+    # 1. TENTAR CRIAR O ENGINE
+    # -------------------------
     try:
-        print("Conectando e executando a consulta...")
-        with db_engine.connect() as db_conn:
-            result = db_conn.execute(sqlalchemy.text(query))
-            
-            for row in result:
-                print(row[0])
-                emails.append(row[0]) 
+        print("⚙️ Tentando criar engine DB...")
+        db_engine = connect_with_connector()
+        print("✅ Engine criado com sucesso!")
+        print(f"   -> Tipo: {type(db_engine)}")
+    except Exception as e:
+        print("\n❌ ERRO AO CRIAR O ENGINE!")
+        print(f"Erro: {e}")
+        print("Traceback completo:")
+        traceback.print_exc()
+        return []  # não adianta continuar
 
-            print("Consulta concluída com sucesso!")
+    # -------------------------
+    # 2. TENTAR CONECTAR
+    # -------------------------
+    try:
+        print("\n🔌 Tentando conectar ao banco...")
+        with db_engine.connect() as db_conn:
+            print("✅ Conexão estabelecida!")
+            print(f"   -> Tipo: {type(db_conn)}")
+
+            try:
+                print("\n▶️ Executando a consulta...")
+                result = db_conn.execute(sqlalchemy.text(query))
+                print("✅ Consulta executada com sucesso!")
+
+            except Exception as e:
+                print("\n❌ ERRO AO EXECUTAR A CONSULTA SQL!")
+                print(f"Erro: {e}")
+                print("Traceback completo:")
+                traceback.print_exc()
+                return []
+
+            # -------------------------
+            # 3. Ler resultados linha por linha
+            # -------------------------
+            try:
+                print("\n📥 Lendo resultados linha por linha:")
+                for idx, row in enumerate(result):
+                    print(f"   -> Linha {idx}: {row}")
+                    emails.append(row[0])
+                print("\n📦 Total de e-mails encontrados:", len(emails))
+
+            except Exception as e:
+                print("\n❌ ERRO AO ITERAR RESULTADOS!")
+                print(f"Erro: {e}")
+                print("Traceback completo:")
+                traceback.print_exc()
+                return []
 
     except Exception as e:
-        print(f"Ocorreu um erro ao conectar ou consultar o banco de dados: {e}")
-        
-    finally:
-        # Fechar o pool de conexões (importante)
+        print("\n❌ ERRO AO CONECTAR AO BANCO!")
+        print(f"Erro: {e}")
+        print("Traceback completo:")
+        traceback.print_exc()
+        return []
+
+    # -------------------------
+    # 4. TENTAR FECHAR O ENGINE
+    # -------------------------
+    try:
+        print("\n🧹 Tentando liberar o pool do engine...")
         db_engine.dispose()
-        
+        print("✅ Pool liberado com sucesso!")
+    except Exception as e:
+        print("\n⚠️ ERRO AO FECHAR O POOL DO ENGINE (não é fatal)")
+        print(f"Erro: {e}")
+        traceback.print_exc()
+
+    print("\n🏁 Finalizando get_user_emails().")
+    print("==========================\n")
     return emails
 
 # --- Execução do Script ---
