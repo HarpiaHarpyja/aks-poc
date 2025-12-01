@@ -21,15 +21,15 @@ spec:
           ports:
             - containerPort: 8080
 
-          # env:
-          #   - name: DB_PASS
-          #     valueFrom:
-          #       secretKeyRef:
-          #         name: app-config-secret
-          #         key: DB_PASS
+          env:
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: app-config-secret
+                  key: DB_PASS
 
-          #   - name: GOOGLE_APPLICATION_CREDENTIALS
-          #     value: "/var/secrets/gcp/gcp-service-account.json"
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/var/secrets/gcp/gcp-service-account.json"
 
           resources:
             requests:
@@ -39,18 +39,18 @@ spec:
               cpu: "500m"
               memory: "256Mi"
 
-          # volumeMounts:
-          #   - name: gcp-key-volume
-          #     mountPath: "/var/secrets/gcp"
-          #     readOnly: true
+          volumeMounts:
+            - name: gcp-key-volume
+              mountPath: "/var/secrets/gcp"
+              readOnly: true
 
-      # volumes:
-      #   - name: gcp-key-volume
-      #     secret:
-      #       secretName: gcp-svc-key
-      #       items:
-      #         - key: gcp-service-account.json
-      #           path: gcp-service-account.json
+      volumes:
+        - name: gcp-key-volume
+          secret:
+            secretName: gcp-svc-key
+            items:
+              - key: gcp-service-account.json
+                path: gcp-service-account.json
 
 ---
 apiVersion: v1
