@@ -89,11 +89,11 @@ Este comando verifica se a sua aplicação foi implantada corretamente e se as i
 
 | Comando | Por que é importante? | 
 | :--- | :---  |
-| kubectl get deploy,pod -n azure-store-1758905293727 | Confirma se o Deployment (hello-python-deployment) está READY (ex: 1/1) e se os Pods estão em estado Running. |
-| kubectl logs hello-python-deployment-86c54bb7c7-bfgh5 --namespace azure-store-1758905293727 | Lista os logs do Pod |
+| kubectl get deploy,pod -n azure-store-1758905293727 | Confirma se o Deployment (hello-python-app) está READY (ex: 1/1) e se os Pods estão em estado Running. |
+| kubectl logs hello-python-app-86c54bb7c7-bfgh5 --namespace azure-store-1758905293727 | Lista os logs do Pod |
 | kubectl get deployment -n azure-store-1758905293727 | Lista os Deployments |
-| kubectl scale deployment/hello-python-deployment --replicas=0 -n azure-store-1758905293727 | Interrompe o Deployment |
-| kubectl scale deployment/hello-python-deployment --replicas=1 -n azure-store-1758905293727 | Reinicia o Deployment |
+| kubectl scale deployment/hello-python-app --replicas=0 -n azure-store-1758905293727 | Interrompe o Deployment |
+| kubectl scale deployment/hello-python-app --replicas=1 -n azure-store-1758905293727 | Reinicia o Deployment |
 
 2. 🔌 Status do Service da Aplicação
 
@@ -165,11 +165,11 @@ az network nsg list --resource-group MC_k8scluster_group_clusterk8s_eastus -o ta
 ## Interromper o container temporariamente
 ```
 kubectl get deployment -n azure-store-1758905293727
-kubectl scale deployment/hello-python-deployment --replicas=0 -n azure-store-1758905293727 
+kubectl scale deployment/hello-python-app --replicas=0 -n azure-store-1758905293727 
 ```
 Para reiniciar:
 ```
-kubectl scale deployment/hello-python-deployment --replicas=1 -n azure-store-1758905293727 
+kubectl scale deployment/hello-python-app --replicas=1 -n azure-store-1758905293727 
 ```
 
 ## Configurar um nome de domínio personalizado e um certificado SSL com o complemento de roteamento de aplicativo
@@ -216,3 +216,9 @@ NSG_ID=$(az network vnet subnet show --resource-group MC_k8scluster_group_cluste
 
 ```
 
+$DnsLabel = http://hello-python-aks.duckdns.org/
+$Namespace = "ingress-basic"
+
+helm upgrade ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-basic  --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-dns-label-name"=hello-python-aks.duckdns.org --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz
+
+helm install cert-manager jetstack/cert-manager  --namespace ingress-basic   --version v1.8.0 --set installCRDs=true --set nodeSelector."kubernetes\.io/os"=linux --set image.repository="${AcrUrl}/${CertManagerImageController}" --set image.tag=$CertManagerTag --set webhook.image.repository="${AcrUrl}/${CertManagerImageWebhook}"   --set webhook.image.tag=$CertManagerTag --set cainjector.image.repository="${AcrUrl}/${CertManagerImageCaInjector}" --set cainjector.image.tag=$CertManagerTag
