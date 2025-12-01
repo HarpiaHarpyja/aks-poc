@@ -15,4 +15,4 @@ COPY app.py .
 EXPOSE 8080
 
 # Comando para iniciar o servidor Flask
-CMD ["python", "app.py"]
+CMD ["python", "-u", "app.py"]
