@@ -1,0 +1,66 @@
+# 1. Deployment da Aplicação Python
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-python-app
+  namespace: ingress-basic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-python
+  template:
+    metadata:
+      labels:
+        app: hello-python
+    spec:
+      containers:
+        - name: hello-python-container
+          image: clusterk8sregistry.azurecr.io/hello-python:latest
+          ports:
+            - containerPort: 8080
+
+          # env:
+          #   - name: DB_PASS
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: app-config-secret
+          #         key: DB_PASS
+
+          #   - name: GOOGLE_APPLICATION_CREDENTIALS
+          #     value: "/var/secrets/gcp/gcp-service-account.json"
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+
+          # volumeMounts:
+          #   - name: gcp-key-volume
+          #     mountPath: "/var/secrets/gcp"
+          #     readOnly: true
+
+      # volumes:
+      #   - name: gcp-key-volume
+      #     secret:
+      #       secretName: gcp-svc-key
+      #       items:
+      #         - key: gcp-service-account.json
+      #           path: gcp-service-account.json
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-python-service
+  namespace: ingress-basic
+spec:
+  selector:
+    app: hello-python
+  ports:
+    - protocol: TCP
+      port: 80          # Porta vista pelo Ingress
+      targetPort: 8080  # Porta exposta no container

@@ -2,14 +2,17 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   name: letsencrypt
-  # namespace: ingress
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
     email: victor@harpia.tec.br
     privateKeySecretRef:
-      name: letsencrypt-prod-key
+      name: letsencrypt
     solvers:
     - http01:
         ingress:
           class: nginx
+          podTemplate:
+            spec:
+              nodeSelector:
+                "kubernetes.io/os": linux
