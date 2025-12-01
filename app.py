@@ -144,8 +144,8 @@ def get_user_emails() -> Tuple[List[str], str]:
 def lista_emails():
     lst = get_user_emails()
     return jsonify({
-        "emails": emails,
-        "debug": debug_info
+        "emails": lst.emails,
+        "debug": lst.log
     })
 
 
