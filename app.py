@@ -6,7 +6,7 @@ import os
 import sqlalchemy
 from google.cloud.sql.connector import Connector, IPTypes
 import pymysql
-from typing import List
+from typing import List, Tuple
 
 app = Flask(__name__)
 
@@ -63,61 +63,79 @@ def connect_with_connector() -> sqlalchemy.engine.base.Engine:
 # ==================================================================
 # Função principal — agora SEM warnings de sessão não fechada
 # ==================================================================
-def get_user_emails() -> List[str]:
-    print("\n==========================")
-    print("🔍 Iniciando get_user_emails()")
-    print("==========================\n")
-
+def get_user_emails() -> Tuple[List[str], str]:
+    log = ""
     emails = []
+
+    log += "\n==========================\n"
+    log += "🔍 Iniciando get_user_emails()\n"
+    log += "==========================\n\n"
+
     query = f"SELECT {EMAIL_COLUMN} FROM {USER_TABLE};"
+    log += f"📌 SQL montado:\n{query}\n\n"
 
-    print(f"📌 SQL montado:\n{query}\n")
-
+    # -----------------------------------------------------
+    # 1. Criar engine
+    # -----------------------------------------------------
+    log += "⚙️ Tentando criar engine DB...\n"
     try:
-        print("⚙️ Tentando criar engine DB...")
         db_engine = connect_with_connector()
-    except Exception as e:
-        print("❌ ERRO ao criar engine!")
-        traceback.print_exc()
-        return []
+        log += "✅ Engine criado com sucesso!\n"
+    except Exception:
+        log += "❌ ERRO ao criar engine!\n"
+        log += traceback.format_exc()
+        return [], log
 
+    # -----------------------------------------------------
+    # 2. Conectar e consultar
+    # -----------------------------------------------------
+    log += "\n🔌 Tentando conectar ao banco...\n"
     try:
-        print("\n🔌 Tentando conectar ao banco...")
         with db_engine.connect() as db_conn:
-            print("✅ Conexão estabelecida!")
+            log += "✅ Conexão estabelecida!\n"
 
             try:
-                print("\n▶️ Executando consulta...")
+                log += "\n▶️ Executando consulta...\n"
                 result = db_conn.execute(sqlalchemy.text(query))
-                print("✅ Consulta OK!")
-            except Exception as e:
-                print("❌ ERRO ao executar SQL!")
-                traceback.print_exc()
-                return []
+                log += "✅ Consulta OK!\n"
+            except Exception:
+                log += "❌ ERRO ao executar SQL!\n"
+                log += traceback.format_exc()
+                return [], log
 
-            print("\n📥 Lendo resultados:")
-            for idx, row in enumerate(result):
-                print(f"   -> Linha {idx}: {row}")
-                emails.append(row[0])
+            log += "\n📥 Lendo resultados:\n"
+            try:
+                for idx, row in enumerate(result):
+                    log += f"   -> Linha {idx}: {row}\n"
+                    emails.append(row[0])
+            except Exception:
+                log += "❌ ERRO ao iterar resultados!\n"
+                log += traceback.format_exc()
+                return [], log
 
-    except Exception as e:
-        print("❌ ERRO ao conectar/consultar!")
-        traceback.print_exc()
-        return []
+    except Exception:
+        log += "❌ ERRO ao conectar/consultar!\n"
+        log += traceback.format_exc()
+        return [], log
 
-    finally:
-        try:
-            print("\n🧹 Fechando o engine...")
-            db_engine.dispose()
-            print("   -> Engine dispose OK!")
-        except Exception as e:
-            print("⚠️ ERRO ao liberar engine!")
-            traceback.print_exc()
+    # -----------------------------------------------------
+    # 3. Fechar engine
+    # -----------------------------------------------------
+    log += "\n🧹 Fechando o engine...\n"
+    try:
+        db_engine.dispose()
+        log += "   -> Engine dispose OK!\n"
+    except Exception:
+        log += "⚠️ ERRO ao liberar engine!\n"
+        log += traceback.format_exc()
 
-    print("\n🏁 Finalizando get_user_emails().")
-    print("==========================\n")
-    return emails
+    # -----------------------------------------------------
+    # 4. Finalização
+    # -----------------------------------------------------
+    log += "\n🏁 Finalizando get_user_emails().\n"
+    log += "==========================\n"
 
+    return emails, log
 
 # ==================================================================
 # Rotas Flask
@@ -125,7 +143,10 @@ def get_user_emails() -> List[str]:
 @app.route('/lista-emails')
 def lista_emails():
     lst = get_user_emails()
-    return jsonify(lst if lst else "Nenhum e-mail encontrado ou erro.")
+    return jsonify({
+        "emails": emails,
+        "debug": debug_info
+    })
 
 
 # Stress CPU
