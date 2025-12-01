@@ -76,7 +76,7 @@ def get_user_emails() -> List[str]:
     return emails
 
 # --- Execução do Script ---
-@app.route('/')
+@app.route('/lista-emails')
 def lista_emails():
     lista_emails = get_user_emails()
     
@@ -111,9 +111,9 @@ def stress_cpu():
         "iterations": count
     })
 
-@app.route('/hello')
+@app.route('/')
 def index():
-    return jsonify({"message": "Hello world!"})
+    return jsonify({"message": "Hello! Try /lista-emails or /stress endpoints."})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
