@@ -1,4 +1,8 @@
-# Deployment da Aplicação Python com Cloud SQL Proxy
+# Versão FINAL e corrigida do manifesto Kubernetes.
+
+# =================================================================
+# 1. DEPLOYMENT (Aplicações + Cloud SQL Proxy)
+# =================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,20 +18,29 @@ spec:
       labels:
         app: hello-python
     spec:
+      # --- ⚠️ PULL SECRET (CRUCIAL PARA ACR) ---
+      # Se a autenticação Managed Identity no AKS falhar, você precisa desta linha
+      # para que o Kubernetes puxe a imagem de um registro privado.
+      # Certifique-se de que 'acr-pull-secret' foi criado.
+      # imagePullSecrets:
+      #   - name: acr-pull-secret
+
       containers:
-        # Container principal
+        # 1. Container Principal (Aplicação Python)
         - name: hello-python-container
           image: clusterk8sregistry.azurecr.io/hello-python:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
-            - name: GOOGLE_APPLICATION_CREDENTIALS
-              value: "/var/secrets/gcp/gcp-service-account.json"
+            # Variáveis para a Aplicação se conectar ao Proxy (localhost:5432)
             - name: DB_HOST
               value: "127.0.0.1"
             - name: DB_PORT
               value: "5432"
+            # Variáveis de Credenciais/Secrets
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/var/secrets/gcp/gcp-service-account.json"
             - name: DB_USER
               value: "grafana_user"
             - name: DB_PASS
@@ -46,20 +59,24 @@ spec:
             - name: gcp-key-volume
               mountPath: "/var/secrets/gcp"
               readOnly: true
-          # readinessProbe:
-          #   tcpSocket:
-          #     port: 5432
-          #   initialDelaySeconds: 5
-          #   periodSeconds: 5
+          
+          # --- ✅ CORREÇÃO: READINESS PROBE ---
+          # Garante que a aplicação só inicie o processo principal após o Proxy estar escutando.
+          readinessProbe:
+            tcpSocket:
+              port: 5432 # Verifica a porta local do Proxy
+            initialDelaySeconds: 20 # Dá tempo para o Proxy autenticar e iniciar o túnel
+            periodSeconds: 10
 
-        # Cloud SQL Proxy
+
+        # 2. Container Sidecar (Cloud SQL Proxy)
         - name: cloud-sql-proxy
           image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
           command:
             - "/cloud_sql_proxy"
             # Instância do Cloud SQL e porta local para escutar
             - "-instances=telemetria-rumo-9ccc4:us-central1:grafana-server-harpia=tcp:5432"
-            # **CORREÇÃO:** Ajustado o caminho para corresponder ao nome do arquivo montado no Secret
+            # Caminho onde o arquivo de credenciais será montado
             - "-credential_file=/secrets/cloudsql/gcp-service-account.json"
           volumeMounts:
             - name: cloudsql-secret
@@ -67,19 +84,24 @@ spec:
               readOnly: true
 
       volumes:
+        # Volume para a chave GCP da Aplicação (se necessário para outros serviços)
         - name: gcp-key-volume
           secret:
             secretName: gcp-svc-key
             items:
               - key: gcp-service-account.json
                 path: gcp-service-account.json
+        # Volume para a chave do Cloud SQL Proxy
         - name: cloudsql-secret
           secret:
             secretName: cloudsql-sa
             items:
-              - key: credentials.json
-                path: gcp-service-account.json
-
+              # --- ✅ CORREÇÃO FINAL: Mapeia a chave 'credentials.json' para o nome de arquivo esperado pelo Proxy ---
+              - key: credentials.json         
+                path: gcp-service-account.json # Nome esperado pelo Proxy: /secrets/cloudsql/gcp-service-account.json
+# =================================================================
+# 2. SERVICE
+# =================================================================
 ---
 apiVersion: v1
 kind: Service
@@ -91,5 +113,5 @@ spec:
     app: hello-python
   ports:
     - protocol: TCP
-      port: 80          # Porta vista pelo Ingress
-      targetPort: 8080  # Porta exposta no container
+      port: 80        # Porta vista pelo Ingress
+      targetPort: 8080 # Porta exposta no container Python
