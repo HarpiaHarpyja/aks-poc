@@ -64,7 +64,7 @@ spec:
           # Garante que a aplicação só inicie o processo principal após o Proxy estar escutando.
           readinessProbe:
             tcpSocket:
-              port: 5432 # Verifica a porta local do Proxy
+              port: 3306 # Verifica a porta local do Proxy
             initialDelaySeconds: 20 # Dá tempo para o Proxy autenticar e iniciar o túnel
             periodSeconds: 10
 
