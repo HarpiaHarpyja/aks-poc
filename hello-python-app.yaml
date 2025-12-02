@@ -46,11 +46,11 @@ spec:
             - name: gcp-key-volume
               mountPath: "/var/secrets/gcp"
               readOnly: true
-          readinessProbe:
-            tcpSocket:
-              port: 5432
-            initialDelaySeconds: 5
-            periodSeconds: 5
+          # readinessProbe:
+          #   tcpSocket:
+          #     port: 5432
+          #   initialDelaySeconds: 5
+          #   periodSeconds: 5
 
         # Cloud SQL Proxy
         - name: cloud-sql-proxy
