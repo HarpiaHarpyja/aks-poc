@@ -1,4 +1,4 @@
-# 1. Deployment da Aplicação Python
+# Deployment da Aplicação Python com Cloud SQL Proxy
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,36 +14,16 @@ spec:
       labels:
         app: hello-python
     spec:
-      # InitContainer para aguardar o Cloud SQL Proxy
-      initContainers:
-        - name: wait-for-cloudsql
-          image: busybox
-          command:
-            - sh
-            - -c
-            - |
-              echo "Aguardando Cloud SQL Proxy..."
-              while ! nc -z localhost 5432; do
-                sleep 2
-              done
-              echo "Cloud SQL Proxy pronto!"
       containers:
+        # Container principal
         - name: hello-python-container
           image: clusterk8sregistry.azurecr.io/hello-python:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
-
           env:
-            # - name: DB_PASS
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: app-config-secret
-            #       key: DB_PASS
-
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: "/var/secrets/gcp/gcp-service-account.json"
-
             - name: DB_HOST
               value: "127.0.0.1"
             - name: DB_PORT
@@ -55,7 +35,6 @@ spec:
                 secretKeyRef:
                   name: app-config-secret
                   key: DB_PASS
-
           resources:
             requests:
               cpu: "100m"
@@ -63,18 +42,17 @@ spec:
             limits:
               cpu: "500m"
               memory: "256Mi"
-
           volumeMounts:
             - name: gcp-key-volume
               mountPath: "/var/secrets/gcp"
               readOnly: true
-
           readinessProbe:
             tcpSocket:
               port: 5432
             initialDelaySeconds: 5
             periodSeconds: 5
 
+        # Cloud SQL Proxy
         - name: cloud-sql-proxy
           image: gcr.io/cloudsql-docker/gce-proxy:1.41.0
           command:
@@ -93,7 +71,6 @@ spec:
             items:
               - key: gcp-service-account.json
                 path: gcp-service-account.json
-
         - name: cloudsql-secret
           secret:
             secretName: cloudsql-sa
