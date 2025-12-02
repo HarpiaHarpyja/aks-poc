@@ -2,22 +2,10 @@ import traceback
 from flask import Flask, request, jsonify
 import time
 import os 
-
-# import sqlalchemy
-# from google.cloud.sql.connector import Connector, IPTypes
 import pymysql
 from typing import List, Tuple
 
 app = Flask(__name__)
-
-# from google.cloud.sql.connector import Connector, IPTypes
-
-# --- Configurações ---
-# INSTANCE_CONNECTION_NAME = "telemetria-rumo-9ccc4:us-central1:grafana-server-harpia"
-# IP_TYPE = IPTypes.PUBLIC
-
-# Cria Connector global
-# GLOBAL_CONNECTOR = Connector(ip_type=IP_TYPE, refresh_strategy="LAZY")
 
 # --- Configurações ---
 DB_USER = "grafana_user"
@@ -28,13 +16,6 @@ DB_NAME = "grafana"
 
 USER_TABLE = "user" 
 EMAIL_COLUMN = "email"
-
-# ============================================================
-# 🔧 Criar UM ÚNICO connector global — evita Unclosed sessions
-# ============================================================
-# print("🔧 Inicializando Connector global...")
-# GLOBAL_CONNECTOR = Connector(ip_type=IP_TYPE, refresh_strategy="LAZY")
-# print("✅ Connector global criado com sucesso!")
 
 
 # ==================================================================
@@ -155,21 +136,6 @@ def stress_cpu():
 @app.route('/')
 def index():
     return jsonify({"message": "Hello! Try /lista-emails or /stress"})
-
-
-# ==================================================================
-# Encerramento limpo — evita UNCL0SED CLIENT SESSION
-# ==================================================================
-# @app.teardown_appcontext
-# def shutdown_context(exception=None):
-#     print("\n🛑 Encerrando Flask — fechando Connector global...")
-#     try:
-#         GLOBAL_CONNECTOR.close()
-#         print("✅ GLOBAL_CONNECTOR fechado sem erros!")
-#     except Exception as e:
-#         print("⚠️ Erro ao fechar Connector:")
-#         traceback.print_exc()
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
