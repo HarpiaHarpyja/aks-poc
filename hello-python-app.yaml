@@ -22,14 +22,26 @@ spec:
             - containerPort: 8080
 
           env:
+            # - name: DB_PASS
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: app-config-secret
+            #       key: DB_PASS
+
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/var/secrets/gcp/gcp-service-account.json"
+
+            - name: DB_HOST
+              value: "127.0.0.1"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "grafana-user"
             - name: DB_PASS
               valueFrom:
                 secretKeyRef:
                   name: app-config-secret
                   key: DB_PASS
-
-            - name: GOOGLE_APPLICATION_CREDENTIALS
-              value: "/var/secrets/gcp/gcp-service-account.json"
 
           resources:
             requests:
@@ -44,6 +56,17 @@ spec:
               mountPath: "/var/secrets/gcp"
               readOnly: true
 
+        - name: cloud-sql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:2.10.1
+          command:
+            - "/cloud_sql_proxy"
+            - "-instances=telemetria-rumo-9ccc4:us-central1:grafana-server-harpia=tcp:5432"
+            - "-credential_file=/secrets/cloudsql/credentials.json"
+          volumeMounts:
+            - name: cloudsql-secret
+              mountPath: /secrets/cloudsql
+              readOnly: true
+
       volumes:
         - name: gcp-key-volume
           secret:
@@ -51,6 +74,10 @@ spec:
             items:
               - key: gcp-service-account.json
                 path: gcp-service-account.json
+
+        - name: cloudsql-secret
+          secret:
+            secretName: cloudsql-sa
 
 ---
 apiVersion: v1

@@ -3,21 +3,28 @@ from flask import Flask, request, jsonify
 import time
 import os 
 
-import sqlalchemy
-from google.cloud.sql.connector import Connector, IPTypes
+# import sqlalchemy
+# from google.cloud.sql.connector import Connector, IPTypes
 import pymysql
 from typing import List, Tuple
 
 app = Flask(__name__)
 
+# from google.cloud.sql.connector import Connector, IPTypes
+
 # --- Configurações ---
-INSTANCE_CONNECTION_NAME = "telemetria-rumo-9ccc4:us-central1:grafana-server-harpia"
+# INSTANCE_CONNECTION_NAME = "telemetria-rumo-9ccc4:us-central1:grafana-server-harpia"
+# IP_TYPE = IPTypes.PUBLIC
+
+# Cria Connector global
+# GLOBAL_CONNECTOR = Connector(ip_type=IP_TYPE, refresh_strategy="LAZY")
+
+# --- Configurações ---
 DB_USER = "grafana_user"
 DB_PASS = os.environ.get("DB_PASS")
 if not DB_PASS:
     raise RuntimeError("❌ Variável de ambiente DB_PASS não definida!")
 DB_NAME = "grafana"
-IP_TYPE = IPTypes.PUBLIC
 
 USER_TABLE = "user" 
 EMAIL_COLUMN = "email"
@@ -25,44 +32,30 @@ EMAIL_COLUMN = "email"
 # ============================================================
 # 🔧 Criar UM ÚNICO connector global — evita Unclosed sessions
 # ============================================================
-print("🔧 Inicializando Connector global...")
-GLOBAL_CONNECTOR = Connector(ip_type=IP_TYPE, refresh_strategy="LAZY")
-print("✅ Connector global criado com sucesso!")
+# print("🔧 Inicializando Connector global...")
+# GLOBAL_CONNECTOR = Connector(ip_type=IP_TYPE, refresh_strategy="LAZY")
+# print("✅ Connector global criado com sucesso!")
 
 
 # ==================================================================
 # Função segura de conexão — sem criar múltiplas sessões aiohttp
 # ==================================================================
-def connect_with_connector() -> sqlalchemy.engine.base.Engine:
-    """Inicializa um pool de conexões reutilizando o connector global."""
-
-    print("⚙️ Criando engine com conector global...")
-
-    def getconn() -> pymysql.connections.Connection:
-        print("🔌 Abrindo conexão com MySQL via Cloud SQL Connector...")
-        conn = GLOBAL_CONNECTOR.connect(
-            INSTANCE_CONNECTION_NAME,
-            "pymysql",
+def connect_to_db():
+    try:
+        conn = pymysql.connect(
+            host="127.0.0.1", # Cloud SQL Proxy
+            port=5432,
             user=DB_USER,
             password=DB_PASS,
-            db=DB_NAME,
+            database=DB_NAME,
+            connect_timeout=10
         )
-        print("   -> Conexão obtida!")
+        print("✅ Conexão com o banco estabelecida via Cloud SQL Proxy!")
         return conn
-
-    engine = sqlalchemy.create_engine(
-        "mysql+pymysql://",
-        creator=getconn,
-        pool_pre_ping=True,
-        pool_recycle=180,
-        connect_args={
-            "connect_timeout": 10   # força erro em 10 segundos
-        }
-    )
-
-    print("✅ Engine criado com sucesso!")
-    return engine
-
+    except Exception:
+        print("❌ ERRO ao conectar ao banco via Proxy!")
+        traceback.print_exc()
+    raise
 
 # ==================================================================
 # Função principal — agora SEM warnings de sessão não fechada
@@ -83,58 +76,41 @@ def get_user_emails() -> Tuple[List[str], str]:
     # -----------------------------------------------------
     log += "⚙️ Tentando criar engine DB...\n"
     try:
-        db_engine = connect_with_connector()
-        log += "✅ Engine criado com sucesso!\n"
-    except Exception:
-        log += "❌ ERRO ao criar engine!\n"
-        log += traceback.format_exc()
-        return [], log
-
-    # -----------------------------------------------------
-    # 2. Conectar e consultar
-    # -----------------------------------------------------
-    log += "\n🔌 Tentando conectar ao banco...\n"
-    try:
-        with db_engine.connect() as db_conn:
+        conn = connect_to_db()
+        with conn.cursor() as cursor:
             log += "✅ Conexão estabelecida!\n"
-
             try:
                 log += "\n▶️ Executando consulta...\n"
-                result = db_conn.execute(sqlalchemy.text(query))
+                cursor.execute(query)
+                result = cursor.fetchall()
                 log += "✅ Consulta OK!\n"
             except Exception:
                 log += "❌ ERRO ao executar SQL!\n"
                 log += traceback.format_exc()
                 return [], log
-
             log += "\n📥 Lendo resultados:\n"
             try:
                 for idx, row in enumerate(result):
-                    log += f"   -> Linha {idx}: {row}\n"
+                    log += f" -> Linha {idx}: {row}\n"
                     emails.append(row[0])
             except Exception:
                 log += "❌ ERRO ao iterar resultados!\n"
                 log += traceback.format_exc()
                 return [], log
-
     except Exception:
         log += "❌ ERRO ao conectar/consultar!\n"
         log += traceback.format_exc()
         return [], log
+    finally:
+        try:
+            conn.close()
+            log += "\n🧹 Conexão encerrada com sucesso!\n"
+        except Exception:
+            log += "\n⚠️ ERRO ao fechar conexão!\n"
+            log += traceback.format_exc()
 
     # -----------------------------------------------------
-    # 3. Fechar engine
-    # -----------------------------------------------------
-    log += "\n🧹 Fechando o engine...\n"
-    try:
-        db_engine.dispose()
-        log += "   -> Engine dispose OK!\n"
-    except Exception:
-        log += "⚠️ ERRO ao liberar engine!\n"
-        log += traceback.format_exc()
-
-    # -----------------------------------------------------
-    # 4. Finalização
+    # 3. Finalização
     # -----------------------------------------------------
     log += "\n🏁 Finalizando get_user_emails().\n"
     log += "==========================\n"
@@ -184,15 +160,15 @@ def index():
 # ==================================================================
 # Encerramento limpo — evita UNCL0SED CLIENT SESSION
 # ==================================================================
-@app.teardown_appcontext
-def shutdown_context(exception=None):
-    print("\n🛑 Encerrando Flask — fechando Connector global...")
-    try:
-        GLOBAL_CONNECTOR.close()
-        print("✅ GLOBAL_CONNECTOR fechado sem erros!")
-    except Exception as e:
-        print("⚠️ Erro ao fechar Connector:")
-        traceback.print_exc()
+# @app.teardown_appcontext
+# def shutdown_context(exception=None):
+#     print("\n🛑 Encerrando Flask — fechando Connector global...")
+#     try:
+#         GLOBAL_CONNECTOR.close()
+#         print("✅ GLOBAL_CONNECTOR fechado sem erros!")
+#     except Exception as e:
+#         print("⚠️ Erro ao fechar Connector:")
+#         traceback.print_exc()
 
 
 if __name__ == '__main__':
