@@ -54,11 +54,13 @@ spec:
 
         # Cloud SQL Proxy
         - name: cloud-sql-proxy
-          image: gcr.io/cloudsql-docker/gce-proxy:1.41.0
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
           command:
             - "/cloud_sql_proxy"
+            # Instância do Cloud SQL e porta local para escutar
             - "-instances=telemetria-rumo-9ccc4:us-central1:grafana-server-harpia=tcp:5432"
-            - "-credential_file=/secrets/cloudsql/credentials.json"
+            # **CORREÇÃO:** Ajustado o caminho para corresponder ao nome do arquivo montado no Secret
+            - "-credential_file=/secrets/cloudsql/gcp-service-account.json"
           volumeMounts:
             - name: cloudsql-secret
               mountPath: /secrets/cloudsql
@@ -74,6 +76,9 @@ spec:
         - name: cloudsql-secret
           secret:
             secretName: cloudsql-sa
+            items:
+              - key: credentials.json
+                path: gcp-service-account.json
 
 ---
 apiVersion: v1
