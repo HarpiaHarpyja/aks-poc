@@ -43,7 +43,7 @@ EMAIL_COLUMN = "email"
 def connect_to_db():
     try:
         conn = pymysql.connect(
-            host="127.0.0.1", # Cloud SQL Proxy
+            host="127.0.0.1",  # Cloud SQL Proxy
             port=5432,
             user=DB_USER,
             password=DB_PASS,
@@ -52,10 +52,10 @@ def connect_to_db():
         )
         print("✅ Conexão com o banco estabelecida via Cloud SQL Proxy!")
         return conn
-    except Exception:
+    except Exception as e:
         print("❌ ERRO ao conectar ao banco via Proxy!")
         traceback.print_exc()
-    raise
+        raise e
 
 # ==================================================================
 # Função principal — agora SEM warnings de sessão não fechada
