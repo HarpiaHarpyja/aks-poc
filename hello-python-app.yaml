@@ -14,6 +14,19 @@ spec:
       labels:
         app: hello-python
     spec:
+      # InitContainer para aguardar o Cloud SQL Proxy
+      initContainers:
+        - name: wait-for-cloudsql
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              echo "Aguardando Cloud SQL Proxy..."
+              while ! nc -z localhost 5432; do
+                sleep 2
+              done
+              echo "Cloud SQL Proxy pronto!"
       containers:
         - name: hello-python-container
           image: clusterk8sregistry.azurecr.io/hello-python:latest
@@ -55,6 +68,12 @@ spec:
             - name: gcp-key-volume
               mountPath: "/var/secrets/gcp"
               readOnly: true
+
+          readinessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 5
+            periodSeconds: 5
 
         - name: cloud-sql-proxy
           image: gcr.io/cloudsql-docker/gce-proxy:1.41.0
