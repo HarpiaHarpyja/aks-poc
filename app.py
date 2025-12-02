@@ -13,7 +13,9 @@ app = Flask(__name__)
 # --- Configurações ---
 INSTANCE_CONNECTION_NAME = "telemetria-rumo-9ccc4:us-central1:grafana-server-harpia"
 DB_USER = "grafana_user"
-DB_PASS = input("Informe a senha do banco (DB_PASS): ")
+DB_PASS = os.environ.get("DB_PASS")
+if not DB_PASS:
+    raise RuntimeError("❌ Variável de ambiente DB_PASS não definida!")
 DB_NAME = "grafana"
 IP_TYPE = IPTypes.PUBLIC
 
