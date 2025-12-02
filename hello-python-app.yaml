@@ -57,7 +57,7 @@ spec:
               readOnly: true
 
         - name: cloud-sql-proxy
-          image: gcr.io/cloudsql-docker/gce-proxy:latest
+          image: gcr.io/cloudsql-docker/gce-proxy@sha256:056ee83ad544
           command:
             - "/cloud_sql_proxy"
             - "-instances=telemetria-rumo-9ccc4:us-central1:grafana-server-harpia=tcp:5432"
