@@ -13,7 +13,7 @@ app = Flask(__name__)
 # --- Configurações ---
 INSTANCE_CONNECTION_NAME = "telemetria-rumo-9ccc4:us-central1:grafana-server-harpia"
 DB_USER = "grafana_user"
-DB_PASS = os.environ.get("DB_PASS")
+DB_PASS = input("Informe a senha do banco (DB_PASS): ")
 DB_NAME = "grafana"
 IP_TYPE = IPTypes.PUBLIC
 
@@ -51,9 +51,11 @@ def connect_with_connector() -> sqlalchemy.engine.base.Engine:
     engine = sqlalchemy.create_engine(
         "mysql+pymysql://",
         creator=getconn,
-        pool_size=5,
-        max_overflow=2,
-        pool_timeout=30,
+        pool_pre_ping=True,
+        pool_recycle=180,
+        connect_args={
+            "connect_timeout": 10   # força erro em 10 segundos
+        }
     )
 
     print("✅ Engine criado com sucesso!")
@@ -144,8 +146,8 @@ def get_user_emails() -> Tuple[List[str], str]:
 def lista_emails():
     lst = get_user_emails()
     return jsonify({
-        "emails": lst.emails,
-        "debug": lst.log
+        "emails": lst[0],
+        "debug": lst[1]
     })
 
 
