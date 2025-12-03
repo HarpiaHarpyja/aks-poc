@@ -10,9 +10,10 @@ spec:
     # Aponta para o Deployment que queremos escalar
     apiVersion: apps/v1
     kind: Deployment
-    name: hello-python
+    name: hello-python-app
   minReplicas: 1
   maxReplicas: 5 # Limite de escalamento
+
   metrics:
   - type: Resource
     resource:
@@ -22,3 +23,18 @@ spec:
         # O HPA tentará manter a utilização média de CPU em 50% 
         # (50% de 100m de request = 50m de CPU)
         averageUtilization: 50
+
+      
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 200
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 15
