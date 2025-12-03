@@ -33,7 +33,8 @@ def connect_to_db():
             user=DB_USER,
             password=DB_PASS,
             database=DB_NAME,
-            connect_timeout=10
+            connect_timeout=10,
+            ssl={"disabled": True}
         )
         print("✅ Conexão com o banco estabelecida via Cloud SQL Proxy!")
         return conn
