@@ -10,7 +10,7 @@ spec:
     # Aponta para o Deployment que queremos escalar
     apiVersion: apps/v1
     kind: Deployment
-    name: hello-python-app 
+    name: hello-python
   minReplicas: 1
   maxReplicas: 5 # Limite de escalamento
   metrics:
