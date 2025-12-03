@@ -110,8 +110,7 @@ def get_user_emails() -> Tuple[List[str], str]:
 def lista_emails():
     lst = get_user_emails()
     return jsonify({
-        "emails": lst[0],
-        "debug": lst[1]
+        "emails": lst[0]
     })
 
 
