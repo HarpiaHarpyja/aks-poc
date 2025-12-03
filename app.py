@@ -74,11 +74,20 @@ def get_user_emails() -> Tuple[List[str], str]:
                 log += "❌ ERRO ao executar SQL!\n"
                 log += traceback.format_exc()
                 return [], log
-            log += "\n📥 Lendo resultados:\n"
+            log += "\n📥 Lendo resultados e extraindo nomes curtos:\n"
             try:
                 for idx, row in enumerate(result):
-                    log += f" -> Linha {idx}: {row}\n"
-                    emails.append(row[0])
+                    email_completo = row[0]
+                    
+                    # --- NOVO TRECHO DE LÓGICA: Extrair nome curto ---
+                    # 1. Pega a parte antes do '@'
+                    parte_antes_do_arroba = email_completo.split('@')[0]
+                    # 2. Pega a parte antes do '.' (do que restou)
+                    nome_curto = parte_antes_do_arroba.split('.')[0]
+                    # -------------------------------------------------
+                    
+                    log += f" -> Linha {idx}: '{email_completo}' -> '{nome_curto}'\n"
+                    emails.append(nome_curto)
             except Exception:
                 log += "❌ ERRO ao iterar resultados!\n"
                 log += traceback.format_exc()
