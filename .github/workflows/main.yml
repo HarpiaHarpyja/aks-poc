@@ -97,6 +97,7 @@ jobs:
             hello-python-app.yaml
             hello-world-ingress.yaml
             cluster-issuer.yaml
+            hpa-python.yaml
           images: |
             ${{ steps.build-image.outputs.image_tag }}
           namespace: ingress-basic

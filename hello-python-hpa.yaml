@@ -4,7 +4,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: hello-python-hpa
-  namespace: ingress
+  namespace: ingress-basic
 spec:
   scaleTargetRef:
     # Aponta para o Deployment que queremos escalar
