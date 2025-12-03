@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 # --- Configurações ---
 DB_USER = "grafana_user"
-DB_PASS = os.environ.get("DB_PASS")
+DB_PASS = "AdmHarpia2025!"
 if not DB_PASS:
     raise RuntimeError("❌ Variável de ambiente DB_PASS não definida!")
 DB_NAME = "grafana"
@@ -34,7 +34,7 @@ def connect_to_db():
             password=DB_PASS,
             database=DB_NAME,
             connect_timeout=10,
-            ssl={"disabled": True}
+            ssl={} # pymsql 1.4.6
         )
         print("✅ Conexão com o banco estabelecida via Cloud SQL Proxy!")
         return conn
