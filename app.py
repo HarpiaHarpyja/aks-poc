@@ -5,6 +5,10 @@ import os
 import pymysql
 from typing import List, Tuple
 
+import signal
+import sys
+
+
 app = Flask(__name__)
 
 # --- Configurações ---
@@ -25,7 +29,7 @@ def connect_to_db():
     try:
         conn = pymysql.connect(
             host="127.0.0.1",  # Cloud SQL Proxy
-            port=3306,
+            port=5432,
             user=DB_USER,
             password=DB_PASS,
             database=DB_NAME,
@@ -136,6 +140,12 @@ def stress_cpu():
 @app.route('/')
 def index():
     return jsonify({"message": "Hello! Try /lista-emails or /stress"})
+
+def handler(sig, frame):
+    print("Shutting down...")
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, handler)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
