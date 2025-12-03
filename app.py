@@ -29,7 +29,7 @@ def connect_to_db():
     try:
         conn = pymysql.connect(
             host="127.0.0.1",  # Cloud SQL Proxy
-            port=5432,
+            port=3306,
             user=DB_USER,
             password=DB_PASS,
             database=DB_NAME,
