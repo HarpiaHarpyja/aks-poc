@@ -1,0 +1,4 @@
+Method,Name,Error,Occurrences
+GET,/lista-emails,HTTPError('503 Server Error: Service Temporarily Unavailable for url: /lista-emails'),957
+GET,/,HTTPError('503 Server Error: Service Temporarily Unavailable for url: /'),924
+GET,/stress?duration=5,HTTPError('503 Server Error: Service Temporarily Unavailable for url: /stress?duration=5'),993
