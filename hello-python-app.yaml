@@ -78,6 +78,13 @@ spec:
             - "/cloud_sql_proxy"
             - "-instances=telemetria-rumo-9ccc4:us-central1:grafana-server-harpia=tcp:3306"
             - "-credential_file=/secrets/cloudsql/gcp-service-account.json"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
           volumeMounts:
             - name: cloudsql-secret
               mountPath: /secrets/cloudsql
