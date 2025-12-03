@@ -138,6 +138,12 @@ Se o acesso falhar, este comando fornece os logs do NGINX, onde você pode ver e
 
 O IP Externo do nosso App é: `http://52.255.214.130/`.
 
+7. Para atualizar o App.py (caso não atualize automaticamente):
+
+```
+kubectl rollout restart deployment hello-python-app -n ingress-basic
+```
+
 ## Variáveis de configuração
 I. Configuração Inicial e Variáveis
 Dadas as variáveis de configuração:
