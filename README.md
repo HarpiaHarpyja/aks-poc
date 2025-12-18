@@ -221,10 +221,3 @@ SUBNET_NAME=$(az network vnet subnet list  --resource-group MC_k8scluster_group_
 NSG_ID=$(az network vnet subnet show --resource-group MC_k8scluster_group_clusterk8s_eastus  --vnet-name aks-vnet-30022306 --name aks-subnet --query networkSecurityGroup.id -o tsv) # /subscriptions/670bc431-d5b3-4586-afcc-5b920f8c7e5e/resourceGroups/MC_k8scluster_group_clusterk8s_eastus/providers/Microsoft.Network/networkSecurityGroups/aks-agentpool-30022306-nsg
 
 ```
-
-$DnsLabel = http://hello-python-aks.duckdns.org/
-$Namespace = "ingress-basic"
-
-helm upgrade ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-basic  --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-dns-label-name"=hello-python-aks.duckdns.org --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz
-
-helm install cert-manager jetstack/cert-manager  --namespace ingress-basic   --version v1.8.0 --set installCRDs=true --set nodeSelector."kubernetes\.io/os"=linux --set image.repository="${AcrUrl}/${CertManagerImageController}" --set image.tag=$CertManagerTag --set webhook.image.repository="${AcrUrl}/${CertManagerImageWebhook}"   --set webhook.image.tag=$CertManagerTag --set cainjector.image.repository="${AcrUrl}/${CertManagerImageCaInjector}" --set cainjector.image.tag=$CertManagerTag
